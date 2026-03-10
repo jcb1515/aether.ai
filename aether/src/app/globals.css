@@ -1,0 +1,62 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background: #0a0a0f;
+  color: #e0e0ff;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a3a;
+  border-radius: 4px;
+}
+
+textarea, input {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+textarea:focus, input:focus {
+  outline: none;
+}
+
+button {
+  transition: opacity 0.15s;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.msg-bubble {
+  animation: fadeUp 0.25s ease;
+}
+
+.chat-item:hover .chat-actions {
+  opacity: 1 !important;
+}
+
+.upload-chip:hover .remove-chip {
+  opacity: 1 !important;
+}
