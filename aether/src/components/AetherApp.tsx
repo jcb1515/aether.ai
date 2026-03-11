@@ -313,7 +313,7 @@ export default function AetherApp() {
 
         <div style={{ padding: '12px 14px', borderTop: '1px solid #1e1e2e' }}>
           <div style={{ fontSize: 10, color: '#555' }}>POWERED BY</div>
-          <div style={{ fontSize: 11, color: '#6040ff', marginTop: 2 }}>Gemini 2.0 Flash</div>
+          <div style={{ fontSize: 11, color: '#6040ff', marginTop: 2 }}>Gemini 2.5 Flash</div>
         </div>
       </div>
 
