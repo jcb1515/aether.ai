@@ -1,6 +1,6 @@
 # Aether
 
-AI chat app powered by Gemini 2.0 Flash. Built with Next.js 14.
+AI chat app powered by Gemini 2.5 Flash. Built with Next.js 14.
 
 ## Deploy to Vercel (5 minutes)
 
