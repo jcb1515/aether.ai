@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rateLimit'
 
-const GEMINI_MODEL = 'gemini-2.0-flash-preview-image-generation'
+const GEMINI_MODEL = 'gemini-2.0-flash-exp-image-generation'
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 // Stricter limit for image generation - more expensive
