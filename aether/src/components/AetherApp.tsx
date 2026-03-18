@@ -46,7 +46,6 @@ export default function AetherApp() {
   const [imagePrompt, setImagePrompt] = useState('')
   const [generatingImage, setGeneratingImage] = useState(false)
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
-  const [tab, setTab] = useState<'chat' | 'image'>('chat')
   const fileRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const renameRef = useRef<HTMLInputElement>(null)
@@ -237,7 +236,7 @@ export default function AetherApp() {
       }}>
         <div style={{ padding: '16px 14px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', flex: 1, letterSpacing: '-0.3px' }}>
-            Aether
+            JaboGPT
           </span>
           <button onClick={() => setSidebarOpen(false)}
             style={{ background: 'none', border: 'none', color: '#555', fontSize: 16, padding: 4 }}>
@@ -331,7 +330,7 @@ export default function AetherApp() {
             </button>
           )}
           <div style={{ flex: 1, fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 15, color: '#fff', letterSpacing: '-0.2px' }}>
-            {activeChat?.title || 'Aether'}
+            {activeChat?.title || 'JaboGPT'}
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
             {(['chat', 'image'] as const).map((t) => (
@@ -353,7 +352,7 @@ export default function AetherApp() {
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
               {activeChat?.messages.length === 0 && !loading && (
                 <div style={{ margin: 'auto', textAlign: 'center', color: '#333' }}>
-                  <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 800, color: '#1e1e30', marginBottom: 8 }}>AETHER</div>
+                  <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 800, color: '#1e1e30', marginBottom: 8 }}>JaboGPT</div>
                   <div style={{ fontSize: 12 }}>Send a message or upload a file to begin</div>
                 </div>
               )}
@@ -452,7 +451,7 @@ export default function AetherApp() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
                   }}
-                  placeholder="Message Aether... (Shift+Enter for newline)"
+                  placeholder="Message JaboGPT... (Shift+Enter for newline)"
                   rows={1}
                   style={{
                     width: '100%', padding: '14px 16px',
@@ -544,7 +543,7 @@ export default function AetherApp() {
                       <img src={img.src} alt={img.prompt} style={{ width: '100%', display: 'block' }} />
                       <div style={{ padding: '8px 10px' }}>
                         <div style={{ fontSize: 11, color: '#666', lineHeight: 1.5, marginBottom: 6 }}>{img.prompt}</div>
-                        <a href={img.src} download={`aether-${img.ts}.png`}
+                        <a href={img.src} download={`JaboGPT-${img.ts}.png`}
                           style={{ fontSize: 11, color: '#6040ff', textDecoration: 'none' }}>
                           ↓ Download
                         </a>

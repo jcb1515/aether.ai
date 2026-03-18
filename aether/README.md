@@ -1,4 +1,4 @@
-# Aether
+# JaboGPT
 
 AI chat app powered by Gemini 2.5 Flash. Built with Next.js 14.
 
@@ -9,11 +9,11 @@ AI chat app powered by Gemini 2.5 Flash. Built with Next.js 14.
 Create a new repo on GitHub, then:
 
 ```bash
-cd aether
+cd JaboGPT
 git init
 git add .
 git commit -m "initial commit"
-git remote add origin https://github.com/YOUR_USERNAME/aether.git
+git remote add origin https://github.com/YOUR_USERNAME/JaboGPT.git
 git push -u origin main
 ```
 
@@ -27,7 +27,7 @@ git push -u origin main
    - Value: your Gemini API key
 5. Click Deploy
 
-That is it. Your site will be live at `https://aether-xxx.vercel.app`.
+That is it. Your site will be live at `https://JaboGPT-xxx.vercel.app`.
 
 ### 3. Custom domain (optional)
 
