@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'JaboGPT',
+  title: 'Aether',
   description: 'AI chat powered by Gemini',
 }
 
