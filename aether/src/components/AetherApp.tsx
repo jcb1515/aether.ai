@@ -26,14 +26,13 @@ type Message = {
   ts: number
 }
 type Chat = { id: string; title: string; pinned: boolean; messages: Message[] }
-type GeneratedImage = { src: string; prompt: string; ts: number }
 
 const INITIAL_CHATS: Chat[] = [
   { id: '1', title: 'Welcome Chat', pinned: true, messages: [] },
 ]
 let chatIdCounter = 2
 
-export default function AetherApp() {
+export default function JaboGPT() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [chats, setChats] = useState<Chat[]>(INITIAL_CHATS)
   const [activeChatId, setActiveChatId] = useState('1')
@@ -43,10 +42,6 @@ export default function AetherApp() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [uploads, setUploads] = useState<Upload[]>([])
-  const [imagePrompt, setImagePrompt] = useState('')
-  const [generatingImage, setGeneratingImage] = useState(false)
-  const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([])
-  const [tab, setTab] = useState<'chat' | 'image'>('chat')
   const fileRef = useRef<HTMLInputElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const renameRef = useRef<HTMLInputElement>(null)
@@ -160,44 +155,6 @@ export default function AetherApp() {
     }
   }
 
-  const generateImage = async () => {
-    if (!imagePrompt.trim()) return
-    setGeneratingImage(true)
-    try {
-      const body = {
-        contents: [{ parts: [{ text: imagePrompt }] }],
-        generationConfig: { responseModalities: ['TEXT', 'IMAGE'] },
-      }
-
-      const res = await fetch('/api/image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-      const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data.error || 'Image generation failed')
-
-      const parts: { inlineData?: { mimeType: string; data: string } }[] =
-        data.candidates?.[0]?.content?.parts || []
-      const imgs = parts
-        .filter((p) => p.inlineData)
-        .map((p) => `data:${p.inlineData!.mimeType};base64,${p.inlineData!.data}`)
-
-      if (imgs.length === 0) throw new Error('No images returned.')
-      setGeneratedImages((prev) => [
-        ...imgs.map((src) => ({ src, prompt: imagePrompt, ts: Date.now() })),
-        ...prev,
-      ])
-      setImagePrompt('')
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Unknown error'
-      alert(`Image generation failed: ${msg}`)
-    } finally {
-      setGeneratingImage(false)
-    }
-  }
-
   const handleFiles = (files: FileList | null) => {
     if (!files) return
     Array.from(files)
@@ -237,7 +194,7 @@ export default function AetherApp() {
       }}>
         <div style={{ padding: '16px 14px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 800, color: '#fff', flex: 1, letterSpacing: '-0.3px' }}>
-            Aether
+            JaboGPT
           </span>
           <button onClick={() => setSidebarOpen(false)}
             style={{ background: 'none', border: 'none', color: '#555', fontSize: 16, padding: 4 }}>
@@ -331,237 +288,161 @@ export default function AetherApp() {
             </button>
           )}
           <div style={{ flex: 1, fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 15, color: '#fff', letterSpacing: '-0.2px' }}>
-            {activeChat?.title || 'Aether'}
-          </div>
-          <div style={{ display: 'flex', gap: 4 }}>
-            {(['chat', 'image'] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)} style={{
-                padding: '5px 14px', borderRadius: 6,
-                background: tab === t ? '#1e1e30' : 'none',
-                border: tab === t ? '1px solid #3a3a5a' : '1px solid transparent',
-                color: tab === t ? '#a0a0ff' : '#555',
-                fontFamily: "'Syne', sans-serif", fontWeight: 600,
-                fontSize: 11, letterSpacing: '0.5px',
-              }}>{t.toUpperCase()}</button>
-            ))}
+            {activeChat?.title || 'JaboGPT'}
           </div>
         </div>
 
-        {/* CHAT TAB */}
-        {tab === 'chat' && (
-          <>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {activeChat?.messages.length === 0 && !loading && (
-                <div style={{ margin: 'auto', textAlign: 'center', color: '#333' }}>
-                  <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 800, color: '#1e1e30', marginBottom: 8 }}>AETHER</div>
-                  <div style={{ fontSize: 12 }}>Send a message or upload a file to begin</div>
-                </div>
-              )}
-              {activeChat?.messages.map((msg, i) => (
-                <div key={i} className="msg-bubble" style={{
-                  display: 'flex',
-                  flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
-                  gap: 10, alignItems: 'flex-start',
-                }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                    background: msg.role === 'user' ? '#3a2a6a' : '#1e2a1e',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, color: msg.role === 'user' ? '#a080ff' : '#60ff80', fontWeight: 700,
-                  }}>
-                    {msg.role === 'user' ? 'U' : 'AI'}
-                  </div>
-                  <div style={{ maxWidth: '72%' }}>
-                    {msg.uploads?.map((u, ui) => (
-                      <div key={ui} style={{ marginBottom: 6 }}>
-                        {u.category === 'image' && u.preview ? (
-                          <img src={u.preview} alt={u.name} style={{ maxWidth: 200, borderRadius: 8, border: '1px solid #2a2a3a' }} />
-                        ) : (
-                          <div style={{ fontSize: 11, color: '#888', background: '#1a1a2a', padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
-                            📎 {u.name}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                    {msg.text && (
-                      <div style={{
-                        background: msg.role === 'user' ? '#1a1030' : '#111118',
-                        border: `1px solid ${msg.error ? '#5a2020' : msg.role === 'user' ? '#3a2a5a' : '#1e1e2e'}`,
-                        borderRadius: msg.role === 'user' ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
-                        padding: '10px 14px', fontSize: 13, lineHeight: 1.7,
-                        color: msg.error ? '#ff8080' : '#ddd',
-                        whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                      }}>
-                        {msg.text}
-                      </div>
-                    )}
-                    <div style={{ fontSize: 10, color: '#444', marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                      {formatTime(msg.ts)}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="msg-bubble" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: '50%', background: '#1e2a1e',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 11, color: '#60ff80', fontWeight: 700,
-                  }}>AI</div>
-                  <div style={{ color: '#555', fontSize: 13, animation: 'pulse 1.2s infinite' }}>Generating...</div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
+        {/* CHAT */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {activeChat?.messages.length === 0 && !loading && (
+            <div style={{ margin: 'auto', textAlign: 'center', color: '#333' }}>
+              <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 32, fontWeight: 800, color: '#1e1e30', marginBottom: 8 }}>JABOGPT</div>
+              <div style={{ fontSize: 12 }}>Send a message or upload a file to begin</div>
             </div>
-
-            {uploads.length > 0 && (
-              <div style={{ padding: '8px 20px 0', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {uploads.map((u, i) => (
-                  <div key={i} className="upload-chip" style={{
-                    position: 'relative', background: '#111118',
-                    border: '1px solid #2a2a3a', borderRadius: 8, overflow: 'hidden',
-                  }}>
+          )}
+          {activeChat?.messages.map((msg, i) => (
+            <div key={i} className="msg-bubble" style={{
+              display: 'flex',
+              flexDirection: msg.role === 'user' ? 'row-reverse' : 'row',
+              gap: 10, alignItems: 'flex-start',
+            }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                background: msg.role === 'user' ? '#3a2a6a' : '#1e2a1e',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, color: msg.role === 'user' ? '#a080ff' : '#60ff80', fontWeight: 700,
+              }}>
+                {msg.role === 'user' ? 'U' : 'AI'}
+              </div>
+              <div style={{ maxWidth: '72%' }}>
+                {msg.uploads?.map((u, ui) => (
+                  <div key={ui} style={{ marginBottom: 6 }}>
                     {u.category === 'image' && u.preview ? (
-                      <img src={u.preview} alt={u.file.name} style={{ height: 60, width: 60, objectFit: 'cover', display: 'block' }} />
+                      <img src={u.preview} alt={u.name} style={{ maxWidth: 200, borderRadius: 8, border: '1px solid #2a2a3a' }} />
                     ) : (
-                      <div style={{ padding: '8px 12px', fontSize: 11, color: '#888', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {u.category === 'video' ? '🎥' : '📄'} {u.file.name}
+                      <div style={{ fontSize: 11, color: '#888', background: '#1a1a2a', padding: '4px 10px', borderRadius: 6, display: 'inline-block' }}>
+                        📎 {u.name}
                       </div>
                     )}
-                    <button
-                      className="remove-chip"
-                      onClick={() => setUploads((prev) => prev.filter((_, j) => j !== i))}
-                      style={{
-                        position: 'absolute', top: 2, right: 2, opacity: 0,
-                        background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fff',
-                        borderRadius: '50%', width: 18, height: 18,
-                        fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >✕</button>
                   </div>
                 ))}
+                {msg.text && (
+                  <div style={{
+                    background: msg.role === 'user' ? '#1a1030' : '#111118',
+                    border: `1px solid ${msg.error ? '#5a2020' : msg.role === 'user' ? '#3a2a5a' : '#1e1e2e'}`,
+                    borderRadius: msg.role === 'user' ? '14px 4px 14px 14px' : '4px 14px 14px 14px',
+                    padding: '10px 14px', fontSize: 13, lineHeight: 1.7,
+                    color: msg.error ? '#ff8080' : '#ddd',
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                  }}>
+                    {msg.text}
+                  </div>
+                )}
+                <div style={{ fontSize: 10, color: '#444', marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
+                  {formatTime(msg.ts)}
+                </div>
               </div>
-            )}
+            </div>
+          ))}
+          {loading && (
+            <div className="msg-bubble" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{
+                width: 28, height: 28, borderRadius: '50%', background: '#1e2a1e',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 11, color: '#60ff80', fontWeight: 700,
+              }}>AI</div>
+              <div style={{ color: '#555', fontSize: 13, animation: 'pulse 1.2s infinite' }}>Generating...</div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
 
-            <div style={{ padding: '12px 20px 20px' }}>
-              <div style={{ background: '#111118', border: '1px solid #2a2a3a', borderRadius: 12, overflow: 'hidden' }}>
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
-                  }}
-                  placeholder="Message Aether... (Shift+Enter for newline)"
-                  rows={1}
+        {uploads.length > 0 && (
+          <div style={{ padding: '8px 20px 0', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {uploads.map((u, i) => (
+              <div key={i} className="upload-chip" style={{
+                position: 'relative', background: '#111118',
+                border: '1px solid #2a2a3a', borderRadius: 8, overflow: 'hidden',
+              }}>
+                {u.category === 'image' && u.preview ? (
+                  <img src={u.preview} alt={u.file.name} style={{ height: 60, width: 60, objectFit: 'cover', display: 'block' }} />
+                ) : (
+                  <div style={{ padding: '8px 12px', fontSize: 11, color: '#888', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {u.category === 'video' ? '🎥' : '📄'} {u.file.name}
+                  </div>
+                )}
+                <button
+                  className="remove-chip"
+                  onClick={() => setUploads((prev) => prev.filter((_, j) => j !== i))}
                   style={{
-                    width: '100%', padding: '14px 16px',
-                    background: 'transparent', border: 'none',
-                    color: '#ddd', fontSize: 13, resize: 'none', lineHeight: 1.6,
-                    maxHeight: 160, overflowY: 'auto',
+                    position: 'absolute', top: 2, right: 2, opacity: 0,
+                    background: 'rgba(0,0,0,0.7)', border: 'none', color: '#fff',
+                    borderRadius: '50%', width: 18, height: 18,
+                    fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
-                  onInput={(e) => {
-                    const t = e.target as HTMLTextAreaElement
-                    t.style.height = 'auto'
-                    t.style.height = Math.min(t.scrollHeight, 160) + 'px'
-                  }}
-                />
-                <div style={{
-                  display: 'flex', alignItems: 'center', padding: '8px 12px',
-                  borderTop: '1px solid #1e1e2e', gap: 8,
-                }}>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    multiple
-                    accept="image/*,video/*,.pdf,.txt,.csv,.json,.md"
-                    style={{ display: 'none' }}
-                    onChange={(e) => handleFiles(e.target.files)}
-                  />
-                  <button
-                    onClick={() => fileRef.current?.click()}
-                    style={{
-                      background: 'none', border: '1px solid #2a2a3a',
-                      borderRadius: 6, color: '#666', padding: '5px 10px', fontSize: 12,
-                    }}
-                  >📎 Upload</button>
-                  <div style={{ flex: 1 }} />
-                  <button
-                    onClick={sendMessage}
-                    disabled={loading || (!input.trim() && uploads.length === 0)}
-                    style={{
-                      background: loading ? '#1a1a2e' : 'linear-gradient(135deg, #6040ff, #9060ff)',
-                      border: 'none', borderRadius: 7, color: '#fff',
-                      padding: '7px 18px', fontFamily: "'Syne', sans-serif",
-                      fontWeight: 700, fontSize: 12, letterSpacing: '0.5px',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                    }}
-                  >{loading ? '...' : 'SEND'}</button>
-                </div>
+                >✕</button>
               </div>
-            </div>
-          </>
-        )}
-
-        {/* IMAGE TAB */}
-        {tab === 'image' && (
-          <div style={{ flex: 1, overflowY: 'auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ background: '#111118', border: '1px solid #2a2a3a', borderRadius: 12, padding: 16 }}>
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 8, letterSpacing: '0.5px' }}>IMAGE GENERATION</div>
-              <textarea
-                value={imagePrompt}
-                onChange={(e) => setImagePrompt(e.target.value)}
-                placeholder="Describe the image you want to generate..."
-                rows={3}
-                style={{
-                  width: '100%', background: '#0d0d14', border: '1px solid #1e1e2e',
-                  borderRadius: 8, color: '#ddd', padding: '10px 12px',
-                  fontSize: 13, resize: 'none', lineHeight: 1.6,
-                }}
-              />
-              <button
-                onClick={generateImage}
-                disabled={generatingImage || !imagePrompt.trim()}
-                style={{
-                  marginTop: 10, padding: '9px 20px',
-                  background: generatingImage ? '#1a1a2e' : 'linear-gradient(135deg, #6040ff, #9060ff)',
-                  border: 'none', borderRadius: 7, color: '#fff',
-                  fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: 12,
-                  letterSpacing: '0.5px', cursor: generatingImage ? 'not-allowed' : 'pointer',
-                }}
-              >{generatingImage ? 'GENERATING...' : 'GENERATE'}</button>
-              <div style={{ marginTop: 8, fontSize: 11, color: '#444' }}>
-                Max 5 images per minute per user.
-              </div>
-            </div>
-
-            {generatedImages.length > 0 && (
-              <div>
-                <div style={{ fontSize: 11, color: '#555', letterSpacing: '1px', marginBottom: 12 }}>GENERATED IMAGES</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
-                  {generatedImages.map((img, i) => (
-                    <div key={i} style={{ background: '#111118', border: '1px solid #1e1e2e', borderRadius: 10, overflow: 'hidden' }}>
-                      <img src={img.src} alt={img.prompt} style={{ width: '100%', display: 'block' }} />
-                      <div style={{ padding: '8px 10px' }}>
-                        <div style={{ fontSize: 11, color: '#666', lineHeight: 1.5, marginBottom: 6 }}>{img.prompt}</div>
-                        <a href={img.src} download={`aether-${img.ts}.png`}
-                          style={{ fontSize: 11, color: '#6040ff', textDecoration: 'none' }}>
-                          ↓ Download
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {generatedImages.length === 0 && !generatingImage && (
-              <div style={{ color: '#333', textAlign: 'center', marginTop: 60, fontSize: 13 }}>
-                No images generated yet
-              </div>
-            )}
+            ))}
           </div>
         )}
+
+        <div style={{ padding: '12px 20px 20px' }}>
+          <div style={{ background: '#111118', border: '1px solid #2a2a3a', borderRadius: 12, overflow: 'hidden' }}>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
+              }}
+              placeholder="Message JaboGPT... (Shift+Enter for newline)"
+              rows={1}
+              style={{
+                width: '100%', padding: '14px 16px',
+                background: 'transparent', border: 'none',
+                color: '#ddd', fontSize: 13, resize: 'none', lineHeight: 1.6,
+                maxHeight: 160, overflowY: 'auto',
+              }}
+              onInput={(e) => {
+                const t = e.target as HTMLTextAreaElement
+                t.style.height = 'auto'
+                t.style.height = Math.min(t.scrollHeight, 160) + 'px'
+              }}
+            />
+            <div style={{
+              display: 'flex', alignItems: 'center', padding: '8px 12px',
+              borderTop: '1px solid #1e1e2e', gap: 8,
+            }}>
+              <input
+                ref={fileRef}
+                type="file"
+                multiple
+                accept="image/*,video/*,.pdf,.txt,.csv,.json,.md"
+                style={{ display: 'none' }}
+                onChange={(e) => handleFiles(e.target.files)}
+              />
+              <button
+                onClick={() => fileRef.current?.click()}
+                style={{
+                  background: 'none', border: '1px solid #2a2a3a',
+                  borderRadius: 6, color: '#666', padding: '5px 10px', fontSize: 12,
+                }}
+              >📎 Upload</button>
+              <div style={{ flex: 1 }} />
+              <button
+                onClick={sendMessage}
+                disabled={loading || (!input.trim() && uploads.length === 0)}
+                style={{
+                  background: loading ? '#1a1a2e' : 'linear-gradient(135deg, #6040ff, #9060ff)',
+                  border: 'none', borderRadius: 7, color: '#fff',
+                  padding: '7px 18px', fontFamily: "'Syne', sans-serif",
+                  fontWeight: 700, fontSize: 12, letterSpacing: '0.5px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                }}
+              >{loading ? '...' : 'SEND'}</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
